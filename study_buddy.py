@@ -1,11 +1,12 @@
 import streamlit as st
 import time
+from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY (STREAMLIT SECRETS)
+# 🔑 API KEY (Streamlit Secrets)
 # ----------------------------
 api_key = st.secrets["GOOGLE_API_KEY"]
 
@@ -15,7 +16,7 @@ model = ChatGoogleGenerativeAI(
 )
 
 # ----------------------------
-# 🎀 PAGE CONFIG
+# 🎀 PAGE CONFIG (LOCK LIGHT MODE FEEL)
 # ----------------------------
 st.set_page_config(
     page_title="Study Buddy AI",
@@ -27,28 +28,30 @@ st.set_page_config(
 # 🌸 HEADER
 # ----------------------------
 st.markdown("""
-<h1 style='text-align:center; color:#ff4d88;'>🌸 Study Buddy AI ✨</h1>
-<p style='text-align:center; color:#666; text-align:center;'>
-your cute AI tutor for learning 📚💖
+<h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
+<p style="text-align:center; color:#666;">
+your cute AI tutor 📚💖
 </p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 KAWAII CHAT UI CSS
+# 🎨 FIXED KAWAII UI (NO DARK MODE BREAK)
 # ----------------------------
 st.markdown("""
 <style>
 
-.stApp {
-    background: linear-gradient(135deg, #fff5f8, #e6f7ff);
+/* FORCE LIGHT STABLE BACKGROUND */
+html, body, .stApp {
+    background-color: #fff7fb !important;
+    color: #222 !important;
 }
 
 /* CHAT WRAPPER */
-.chat-container {
+.chat-box {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 80px;
+    margin-bottom: 90px;
 }
 
 /* ROW */
@@ -67,36 +70,34 @@ st.markdown("""
     justify-content: flex-start;
 }
 
-/* BUBBLE */
+/* CHAT BUBBLE (IMPORTANT: FIT CONTENT) */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
     width: fit-content;
-    max-width: 75%;
+    max-width: 70%;
     word-wrap: break-word;
     font-size: 15px;
+    line-height: 1.4;
+    margin: 4px 0;
 }
 
 /* USER STYLE */
 .user {
-    background-color: #ffe4ec;
+    background-color: #ffd6e7;
     color: #222;
 }
 
 /* AI STYLE */
 .ai {
-    background-color: #e6f7ff;
+    background-color: #dff6ff;
     color: #222;
 }
 
-/* small animation feel */
-.bubble {
-    animation: fadeIn 0.2s ease-in;
-}
-
-@keyframes fadeIn {
-    from {opacity: 0;}
-    to {opacity: 1;}
+/* INPUT STYLE FIX */
+.stChatInputContainer {
+    background: white !important;
+    border-radius: 12px;
 }
 
 </style>
@@ -109,8 +110,8 @@ system_prompt = SystemMessage(content="""
 You are Study Buddy AI 🌸
 
 Rules:
-- Explain concepts simply
-- Use examples when needed
+- Explain simply
+- Give examples
 - Stay focused on learning
 - Be friendly and supportive
 """)
@@ -125,7 +126,6 @@ if "chat_history" not in st.session_state:
 # 💬 RENDER CHAT
 # ----------------------------
 def render_chat():
-
     for msg in st.session_state.chat_history:
 
         if isinstance(msg, HumanMessage):
@@ -148,14 +148,14 @@ render_chat()
 # ----------------------------
 # ✍️ INPUT
 # ----------------------------
-user_input = st.chat_input("Ask me anything to learn 📚✨")
+user_input = st.chat_input("Ask me anything 📚✨")
 
 # ----------------------------
-# 🚀 LOGIC
+# 🚀 USER MESSAGE HANDLING
 # ----------------------------
 if user_input:
 
-    # 1. show user instantly
+    # instantly show user message
     st.session_state.chat_history.append(
         HumanMessage(content=user_input)
     )
@@ -163,17 +163,16 @@ if user_input:
     st.rerun()
 
 # ----------------------------
-# 🤖 AI RESPONSE (after rerun)
+# 🤖 AI RESPONSE FLOW
 # ----------------------------
 if len(st.session_state.chat_history) > 0:
     last_msg = st.session_state.chat_history[-1]
 
     if isinstance(last_msg, HumanMessage):
 
-        # typing effect
+        # smooth thinking effect
         with st.spinner("🤖 AI is thinking... ●●●"):
             time.sleep(0.7)
-
             response = model.invoke(st.session_state.chat_history)
 
         st.session_state.chat_history.append(
