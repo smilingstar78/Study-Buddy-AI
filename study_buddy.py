@@ -1,23 +1,21 @@
 import streamlit as st
 import time
-import os
-from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY
+# 🔑 API KEY (STREAMLIT SECRETS)
 # ----------------------------
-load_dotenv()
+api_key = st.secrets["GOOGLE_API_KEY"]
 
 model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    api_key=os.getenv("GOOGLE_API_KEY")
+    api_key=api_key
 )
 
 # ----------------------------
-# 🎀 PAGE SETUP
+# 🎀 PAGE CONFIG
 # ----------------------------
 st.set_page_config(
     page_title="Study Buddy AI",
@@ -25,13 +23,18 @@ st.set_page_config(
     layout="centered"
 )
 
+# ----------------------------
+# 🌸 HEADER
+# ----------------------------
 st.markdown("""
 <h1 style='text-align:center; color:#ff4d88;'>🌸 Study Buddy AI ✨</h1>
-<p style='text-align:center; color:#666;'>your cute AI study buddy 📚💖</p>
+<p style='text-align:center; color:#666; text-align:center;'>
+your cute AI tutor for learning 📚💖
+</p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 KAWAII CHAT CSS
+# 🎨 KAWAII CHAT UI CSS
 # ----------------------------
 st.markdown("""
 <style>
@@ -40,36 +43,36 @@ st.markdown("""
     background: linear-gradient(135deg, #fff5f8, #e6f7ff);
 }
 
-/* CHAT CONTAINER */
-.chat-box {
+/* CHAT WRAPPER */
+.chat-container {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin-bottom: 80px;
 }
 
-/* ROW WRAPPER */
+/* ROW */
 .row {
     display: flex;
     width: 100%;
 }
 
-/* USER RIGHT SIDE */
+/* USER RIGHT */
 .user-row {
     justify-content: flex-end;
 }
 
-/* AI LEFT SIDE */
+/* AI LEFT */
 .ai-row {
     justify-content: flex-start;
 }
 
-/* COMMON BUBBLE */
+/* BUBBLE */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
-    max-width: 70%;
     width: fit-content;
+    max-width: 75%;
     word-wrap: break-word;
     font-size: 15px;
 }
@@ -77,18 +80,23 @@ st.markdown("""
 /* USER STYLE */
 .user {
     background-color: #ffe4ec;
-    text-align: left;
+    color: #222;
 }
 
 /* AI STYLE */
 .ai {
     background-color: #e6f7ff;
-    text-align: left;
+    color: #222;
 }
 
-/* TYPOGRAPHY */
-p {
-    margin: 0;
+/* small animation feel */
+.bubble {
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
 }
 
 </style>
@@ -99,9 +107,12 @@ p {
 # ----------------------------
 system_prompt = SystemMessage(content="""
 You are Study Buddy AI 🌸
-- Explain simply
-- Use examples
+
+Rules:
+- Explain concepts simply
+- Use examples when needed
 - Stay focused on learning
+- Be friendly and supportive
 """)
 
 # ----------------------------
@@ -114,6 +125,7 @@ if "chat_history" not in st.session_state:
 # 💬 RENDER CHAT
 # ----------------------------
 def render_chat():
+
     for msg in st.session_state.chat_history:
 
         if isinstance(msg, HumanMessage):
@@ -130,36 +142,38 @@ def render_chat():
             </div>
             """, unsafe_allow_html=True)
 
-# ----------------------------
-# SHOW CHAT
-# ----------------------------
+# show chat
 render_chat()
 
 # ----------------------------
-# INPUT
+# ✍️ INPUT
 # ----------------------------
-user_input = st.chat_input("Ask me anything 📚✨")
+user_input = st.chat_input("Ask me anything to learn 📚✨")
 
 # ----------------------------
-# LOGIC
+# 🚀 LOGIC
 # ----------------------------
 if user_input:
 
-    # add user message
+    # 1. show user instantly
     st.session_state.chat_history.append(
         HumanMessage(content=user_input)
     )
 
     st.rerun()
 
-# AFTER rerun → generate AI response
+# ----------------------------
+# 🤖 AI RESPONSE (after rerun)
+# ----------------------------
 if len(st.session_state.chat_history) > 0:
     last_msg = st.session_state.chat_history[-1]
 
     if isinstance(last_msg, HumanMessage):
 
-        with st.spinner("🤖 AI is thinking..."):
+        # typing effect
+        with st.spinner("🤖 AI is thinking... ●●●"):
             time.sleep(0.7)
+
             response = model.invoke(st.session_state.chat_history)
 
         st.session_state.chat_history.append(
