@@ -16,7 +16,7 @@ model = ChatGoogleGenerativeAI(
 )
 
 # ----------------------------
-# 🎀 PAGE CONFIG (LOCK LIGHT MODE FEEL)
+# 🎀 PAGE CONFIG
 # ----------------------------
 st.set_page_config(
     page_title="Study Buddy AI",
@@ -30,34 +30,35 @@ st.set_page_config(
 st.markdown("""
 <h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
 <p style="text-align:center; color:#666;">
-your cute AI tutor 📚💖
+your cute AI study buddy 📚💖
 </p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 FIXED KAWAII UI (NO DARK MODE BREAK)
+# 🎨 ULTRA FORCE LIGHT MODE (mobile-safe)
 # ----------------------------
 st.markdown("""
 <style>
 
-/* FORCE LIGHT STABLE BACKGROUND */
+/* FORCE LIGHT MODE ALWAYS */
 html, body, .stApp {
     background-color: #fff7fb !important;
     color: #222 !important;
 }
 
-/* CHAT WRAPPER */
-.chat-box {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 90px;
+/* kill system dark mode influence */
+@media (prefers-color-scheme: dark) {
+    html, body, .stApp {
+        background-color: #fff7fb !important;
+        color: #222 !important;
+    }
 }
 
-/* ROW */
+/* CHAT ROWS */
 .row {
     display: flex;
     width: 100%;
+    margin: 6px 0;
 }
 
 /* USER RIGHT */
@@ -70,16 +71,15 @@ html, body, .stApp {
     justify-content: flex-start;
 }
 
-/* CHAT BUBBLE (IMPORTANT: FIT CONTENT) */
+/* CHAT BUBBLE */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
     width: fit-content;
-    max-width: 70%;
+    max-width: 75%;
     word-wrap: break-word;
     font-size: 15px;
     line-height: 1.4;
-    margin: 4px 0;
 }
 
 /* USER STYLE */
@@ -94,7 +94,7 @@ html, body, .stApp {
     color: #222;
 }
 
-/* INPUT STYLE FIX */
+/* input fix */
 .stChatInputContainer {
     background: white !important;
     border-radius: 12px;
@@ -110,8 +110,8 @@ system_prompt = SystemMessage(content="""
 You are Study Buddy AI 🌸
 
 Rules:
-- Explain simply
-- Give examples
+- Explain concepts simply
+- Use examples
 - Stay focused on learning
 - Be friendly and supportive
 """)
@@ -126,6 +126,7 @@ if "chat_history" not in st.session_state:
 # 💬 RENDER CHAT
 # ----------------------------
 def render_chat():
+
     for msg in st.session_state.chat_history:
 
         if isinstance(msg, HumanMessage):
@@ -151,11 +152,10 @@ render_chat()
 user_input = st.chat_input("Ask me anything 📚✨")
 
 # ----------------------------
-# 🚀 USER MESSAGE HANDLING
+# 🚀 USER MESSAGE FLOW
 # ----------------------------
 if user_input:
 
-    # instantly show user message
     st.session_state.chat_history.append(
         HumanMessage(content=user_input)
     )
@@ -166,11 +166,11 @@ if user_input:
 # 🤖 AI RESPONSE FLOW
 # ----------------------------
 if len(st.session_state.chat_history) > 0:
+
     last_msg = st.session_state.chat_history[-1]
 
     if isinstance(last_msg, HumanMessage):
 
-        # smooth thinking effect
         with st.spinner("🤖 AI is thinking... ●●●"):
             time.sleep(0.7)
             response = model.invoke(st.session_state.chat_history)
