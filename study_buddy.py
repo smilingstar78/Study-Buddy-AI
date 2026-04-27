@@ -29,7 +29,7 @@ st.set_page_config(
 st.markdown("""
 <h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
 <p style="text-align:center; color:#666;">
-fast + cute AI tutor 📚💖
+Your AI tutor 📚💖
 </p>
 """, unsafe_allow_html=True)
 
