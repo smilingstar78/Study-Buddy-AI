@@ -4,19 +4,18 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY
+# 🔑 API KEY (quiet fail)
 # ----------------------------
-try:
-    api_key = st.secrets["GOOGLE_API_KEY"]
-except:
-    st.error("🚨 API key not found. Add it in Streamlit Secrets.")
+if "GOOGLE_API_KEY" not in st.secrets:
     st.stop()
+
+api_key = st.secrets["GOOGLE_API_KEY"]
 
 # ----------------------------
 # 🤖 MODEL
 # ----------------------------
 model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",   # stable + fast
+    model="gemini-2.5-flash",
     api_key=api_key,
     temperature=0.7
 )
@@ -36,12 +35,12 @@ st.set_page_config(
 st.markdown("""
 <h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
 <p style="text-align:center; color:#666;">
-fast + cute AI tutor 📚💖
+your cute AI study buddy 📚💖
 </p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 UI (FORCE LIGHT MODE)
+# 🎨 CLEAN UI
 # ----------------------------
 st.markdown("""
 <style>
@@ -135,17 +134,6 @@ def render_chat():
 render_chat()
 
 # ----------------------------
-# 🧪 TEST BUTTON (DEBUG)
-# ----------------------------
-if st.button("🔍 Test API"):
-    try:
-        res = model.invoke([HumanMessage(content="Hello")])
-        st.success("✅ API Working!")
-        st.write(res.content)
-    except Exception as e:
-        st.error(f"❌ API Error: {e}")
-
-# ----------------------------
 # ✍️ INPUT
 # ----------------------------
 user_input = st.chat_input("Ask me anything 📚✨")
@@ -162,7 +150,7 @@ if user_input and user_input.strip():
     st.rerun()
 
 # ----------------------------
-# 🤖 AI RESPONSE (SAFE)
+# 🤖 AI RESPONSE (SMOOTH)
 # ----------------------------
 if len(st.session_state.chat_history) > 0:
 
@@ -171,10 +159,9 @@ if len(st.session_state.chat_history) > 0:
     if isinstance(last_msg, HumanMessage):
 
         placeholder = st.empty()
-        placeholder.markdown("🤖 AI is typing...")
+        placeholder.markdown("🤖 Thinking...")
 
         try:
-            # reduce tokens (important for speed + avoid errors)
             st.session_state.chat_history = (
                 [system_prompt] + st.session_state.chat_history[-4:]
             )
@@ -187,9 +174,12 @@ if len(st.session_state.chat_history) > 0:
                 AIMessage(content=response.content)
             )
 
-        except Exception as e:
+        except:
             placeholder.empty()
-            st.error(f"⚠️ ERROR: {e}")
-            print("FULL ERROR:", e)
+
+            # 👇 USER-FRIENDLY FALLBACK (no scary error)
+            st.session_state.chat_history.append(
+                AIMessage(content="Oops 😅 something went off-track. Try asking again!")
+            )
 
         st.rerun()
