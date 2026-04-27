@@ -4,20 +4,21 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY (SAFE LOAD)
+# 🔑 API KEY
 # ----------------------------
 try:
     api_key = st.secrets["GOOGLE_API_KEY"]
 except:
-    st.error("🚨 API key not found. Please add it in Streamlit Secrets.")
+    st.error("🚨 API key not found. Add it in Streamlit Secrets.")
     st.stop()
 
 # ----------------------------
-# 🤖 MODEL (SAFE VERSION)
+# 🤖 MODEL
 # ----------------------------
 model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash-latest",  # safer model name
-    api_key=api_key
+    model="gemini-1.5-flash",   # stable + fast
+    api_key=api_key,
+    temperature=0.7
 )
 
 # ----------------------------
@@ -40,12 +41,11 @@ fast + cute AI tutor 📚💖
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 UI (DARK MODE PROOF)
+# 🎨 UI (FORCE LIGHT MODE)
 # ----------------------------
 st.markdown("""
 <style>
 
-/* FORCE LIGHT MODE */
 html, body, .stApp {
     background-color: #fff7fb !important;
     color: #222 !important;
@@ -63,7 +63,7 @@ html, body, .stApp {
     justify-content: flex-start;
 }
 
-/* CHAT BUBBLE */
+/* BUBBLE */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
@@ -113,7 +113,7 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = [system_prompt]
 
 # ----------------------------
-# 💬 DISPLAY CHAT
+# 💬 RENDER CHAT
 # ----------------------------
 def render_chat():
     for msg in st.session_state.chat_history:
@@ -135,6 +135,17 @@ def render_chat():
 render_chat()
 
 # ----------------------------
+# 🧪 TEST BUTTON (DEBUG)
+# ----------------------------
+if st.button("🔍 Test API"):
+    try:
+        res = model.invoke([HumanMessage(content="Hello")])
+        st.success("✅ API Working!")
+        st.write(res.content)
+    except Exception as e:
+        st.error(f"❌ API Error: {e}")
+
+# ----------------------------
 # ✍️ INPUT
 # ----------------------------
 user_input = st.chat_input("Ask me anything 📚✨")
@@ -151,7 +162,7 @@ if user_input and user_input.strip():
     st.rerun()
 
 # ----------------------------
-# 🤖 AI RESPONSE (SAFE + FAST)
+# 🤖 AI RESPONSE (SAFE)
 # ----------------------------
 if len(st.session_state.chat_history) > 0:
 
@@ -163,7 +174,7 @@ if len(st.session_state.chat_history) > 0:
         placeholder.markdown("🤖 AI is typing...")
 
         try:
-            # reduce memory for speed & avoid token issues
+            # reduce tokens (important for speed + avoid errors)
             st.session_state.chat_history = (
                 [system_prompt] + st.session_state.chat_history[-4:]
             )
@@ -178,7 +189,7 @@ if len(st.session_state.chat_history) > 0:
 
         except Exception as e:
             placeholder.empty()
-            st.error("⚠️ Something went wrong. Try again.")
-            print("ERROR:", e)
+            st.error(f"⚠️ ERROR: {e}")
+            print("FULL ERROR:", e)
 
         st.rerun()
