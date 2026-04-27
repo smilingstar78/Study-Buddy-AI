@@ -1,16 +1,22 @@
 import streamlit as st
-from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY (Streamlit Secrets)
+# 🔑 API KEY (SAFE LOAD)
 # ----------------------------
-api_key = st.secrets["GOOGLE_API_KEY"]
+try:
+    api_key = st.secrets["GOOGLE_API_KEY"]
+except:
+    st.error("🚨 API key not found. Please add it in Streamlit Secrets.")
+    st.stop()
 
+# ----------------------------
+# 🤖 MODEL (SAFE VERSION)
+# ----------------------------
 model = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",  # ⚡ faster model
+    model="gemini-1.5-flash-latest",  # safer model name
     api_key=api_key
 )
 
@@ -29,16 +35,17 @@ st.set_page_config(
 st.markdown("""
 <h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
 <p style="text-align:center; color:#666;">
-Your AI tutor 📚💖
+fast + cute AI tutor 📚💖
 </p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 FIXED KAWAII UI
+# 🎨 UI (DARK MODE PROOF)
 # ----------------------------
 st.markdown("""
 <style>
 
+/* FORCE LIGHT MODE */
 html, body, .stApp {
     background-color: #fff7fb !important;
     color: #222 !important;
@@ -56,7 +63,7 @@ html, body, .stApp {
     justify-content: flex-start;
 }
 
-/* BUBBLE */
+/* CHAT BUBBLE */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
@@ -64,7 +71,7 @@ html, body, .stApp {
     max-width: 75%;
     word-wrap: break-word;
     font-size: 15px;
-    margin: 5px 0;
+    margin: 6px 0;
 }
 
 /* USER */
@@ -77,7 +84,7 @@ html, body, .stApp {
     background-color: #dff6ff;
 }
 
-/* input */
+/* INPUT */
 .stChatInputContainer {
     background: white !important;
     border-radius: 12px;
@@ -106,10 +113,9 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = [system_prompt]
 
 # ----------------------------
-# 💬 RENDER CHAT
+# 💬 DISPLAY CHAT
 # ----------------------------
 def render_chat():
-
     for msg in st.session_state.chat_history:
 
         if isinstance(msg, HumanMessage):
@@ -136,7 +142,7 @@ user_input = st.chat_input("Ask me anything 📚✨")
 # ----------------------------
 # 🚀 USER MESSAGE
 # ----------------------------
-if user_input:
+if user_input and user_input.strip():
 
     st.session_state.chat_history.append(
         HumanMessage(content=user_input)
@@ -145,7 +151,7 @@ if user_input:
     st.rerun()
 
 # ----------------------------
-# 🤖 AI RESPONSE (FAST MODE)
+# 🤖 AI RESPONSE (SAFE + FAST)
 # ----------------------------
 if len(st.session_state.chat_history) > 0:
 
@@ -153,22 +159,26 @@ if len(st.session_state.chat_history) > 0:
 
     if isinstance(last_msg, HumanMessage):
 
-        # ⚡ fast typing indicator (no delay)
         placeholder = st.empty()
         placeholder.markdown("🤖 AI is typing...")
 
-        # reduce memory for speed
-        st.session_state.chat_history = (
-            [system_prompt] + st.session_state.chat_history[-6:]
-        )
+        try:
+            # reduce memory for speed & avoid token issues
+            st.session_state.chat_history = (
+                [system_prompt] + st.session_state.chat_history[-4:]
+            )
 
-        # AI call
-        response = model.invoke(st.session_state.chat_history)
+            response = model.invoke(st.session_state.chat_history)
 
-        placeholder.empty()
+            placeholder.empty()
 
-        st.session_state.chat_history.append(
-            AIMessage(content=response.content)
-        )
+            st.session_state.chat_history.append(
+                AIMessage(content=response.content)
+            )
+
+        except Exception as e:
+            placeholder.empty()
+            st.error("⚠️ Something went wrong. Try again.")
+            print("ERROR:", e)
 
         st.rerun()
