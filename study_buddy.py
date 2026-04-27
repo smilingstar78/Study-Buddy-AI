@@ -4,20 +4,13 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # ----------------------------
-# 🔑 API KEY (quiet fail)
+# 🔑 API KEY
 # ----------------------------
-if "GOOGLE_API_KEY" not in st.secrets:
-    st.stop()
-
 api_key = st.secrets["GOOGLE_API_KEY"]
 
-# ----------------------------
-# 🤖 MODEL
-# ----------------------------
 model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
-    api_key=api_key,
-    temperature=0.7
+    api_key=api_key
 )
 
 # ----------------------------
@@ -34,61 +27,40 @@ st.set_page_config(
 # ----------------------------
 st.markdown("""
 <h1 style="text-align:center; color:#ff4d88;">🌸 Study Buddy AI ✨</h1>
-<p style="text-align:center; color:#666;">
-your cute AI study buddy 📚💖
-</p>
+<p style="text-align:center; color:#666;">your cute AI tutor 📚💖</p>
 """, unsafe_allow_html=True)
 
 # ----------------------------
-# 🎨 CLEAN UI
+# 🎨 UI
 # ----------------------------
 st.markdown("""
 <style>
-
 html, body, .stApp {
     background-color: #fff7fb !important;
     color: #222 !important;
 }
 
-/* USER RIGHT */
 .user-row {
     display: flex;
     justify-content: flex-end;
 }
 
-/* AI LEFT */
 .ai-row {
     display: flex;
     justify-content: flex-start;
 }
 
-/* BUBBLE */
 .bubble {
     padding: 10px 14px;
     border-radius: 16px;
     width: fit-content;
     max-width: 75%;
     word-wrap: break-word;
-    font-size: 15px;
     margin: 6px 0;
 }
 
-/* USER */
-.user {
-    background-color: #ffd6e7;
-}
-
-/* AI */
-.ai {
-    background-color: #dff6ff;
-}
-
-/* INPUT */
-.stChatInputContainer {
-    background: white !important;
-    border-radius: 12px;
-}
-
+.user { background: #ffd6e7; }
+.ai { background: #dff6ff; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -97,89 +69,38 @@ html, body, .stApp {
 # ----------------------------
 system_prompt = SystemMessage(content="""
 You are Study Buddy AI 🌸
-
-Rules:
-- Explain simply
-- Give examples
-- Stay focused on learning
-- Be friendly and supportive
+Explain simply and help users learn.
 """)
 
 # ----------------------------
-# 💬 SESSION STATE
+# 💬 SESSION
 # ----------------------------
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = [system_prompt]
+if "messages" not in st.session_state:
+    st.session_state.messages = [system_prompt]
 
 # ----------------------------
-# 💬 RENDER CHAT
+# 💬 DISPLAY CHAT
 # ----------------------------
-def render_chat():
-    for msg in st.session_state.chat_history:
-
-        if isinstance(msg, HumanMessage):
-            st.markdown(f"""
-            <div class="user-row">
-                <div class="bubble user">🧑‍🎓 {msg.content}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        elif isinstance(msg, AIMessage):
-            st.markdown(f"""
-            <div class="ai-row">
-                <div class="bubble ai">🤖 {msg.content}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-render_chat()
+for msg in st.session_state.messages:
+    if isinstance(msg, HumanMessage):
+        st.markdown(f"<div class='user-row'><div class='bubble user'>{msg.content}</div></div>", unsafe_allow_html=True)
+    elif isinstance(msg, AIMessage):
+        st.markdown(f"<div class='ai-row'><div class='bubble ai'>{msg.content}</div></div>", unsafe_allow_html=True)
 
 # ----------------------------
 # ✍️ INPUT
 # ----------------------------
-user_input = st.chat_input("Ask me anything 📚✨")
+user_input = st.chat_input("Ask something...")
 
-# ----------------------------
-# 🚀 USER MESSAGE
-# ----------------------------
-if user_input and user_input.strip():
+if user_input:
+    # show user instantly
+    st.session_state.messages.append(HumanMessage(content=user_input))
 
-    st.session_state.chat_history.append(
-        HumanMessage(content=user_input)
-    )
+    # show typing
+    with st.spinner("🤖 Thinking..."):
+        response = model.invoke(st.session_state.messages)
+
+    # show AI response
+    st.session_state.messages.append(AIMessage(content=response.content))
 
     st.rerun()
-
-# ----------------------------
-# 🤖 AI RESPONSE (SMOOTH)
-# ----------------------------
-if len(st.session_state.chat_history) > 0:
-
-    last_msg = st.session_state.chat_history[-1]
-
-    if isinstance(last_msg, HumanMessage):
-
-        placeholder = st.empty()
-        placeholder.markdown("🤖 Thinking...")
-
-        try:
-            st.session_state.chat_history = (
-                [system_prompt] + st.session_state.chat_history[-4:]
-            )
-
-            response = model.invoke(st.session_state.chat_history)
-
-            placeholder.empty()
-
-            st.session_state.chat_history.append(
-                AIMessage(content=response.content)
-            )
-
-        except:
-            placeholder.empty()
-
-            # 👇 USER-FRIENDLY FALLBACK (no scary error)
-            st.session_state.chat_history.append(
-                AIMessage(content="Oops 😅 something went off-track. Try asking again!")
-            )
-
-        st.rerun()
