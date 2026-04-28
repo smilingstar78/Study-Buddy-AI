@@ -83,9 +83,15 @@ if "messages" not in st.session_state:
 # ----------------------------
 for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
-        st.markdown(f"<div class='user-row'><div class='bubble user'>{msg.content}</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='user-row'><div class='bubble user'>{msg.content}</div></div>",
+            unsafe_allow_html=True
+        )
     elif isinstance(msg, AIMessage):
-        st.markdown(f"<div class='ai-row'><div class='bubble ai'>{msg.content}</div></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='ai-row'><div class='bubble ai'>{msg.content}</div></div>",
+            unsafe_allow_html=True
+        )
 
 # ----------------------------
 # ✍️ INPUT
@@ -93,14 +99,20 @@ for msg in st.session_state.messages:
 user_input = st.chat_input("Ask something...")
 
 if user_input:
-    # show user instantly
+    # add user message
     st.session_state.messages.append(HumanMessage(content=user_input))
 
-    # show typing
+    # 🔥 show instantly
+    st.rerun()
+
+# ----------------------------
+# 🤖 AI RESPONSE (runs AFTER rerun)
+# ----------------------------
+if len(st.session_state.messages) > 0 and isinstance(st.session_state.messages[-1], HumanMessage):
+
     with st.spinner("🤖 Thinking..."):
         response = model.invoke(st.session_state.messages)
 
-    # show AI response
     st.session_state.messages.append(AIMessage(content=response.content))
 
     st.rerun()
